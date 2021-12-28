@@ -12,10 +12,15 @@ import (
 )
 
 func main() {
-	fmt.Println("Convert csv to advertisement text.")
-	movies := reader.ReadMovies()
+	args := os.Args
+	if len(args) < 2 {
+		fmt.Println("No path provided")
+		return
+	}
+	path := args[1]
+	fmt.Printf("Convert csv to advertisement text from path: %s\n", path)
+	movies := reader.ReadMovies(path)
 	printSalesText(movies)
-	// repository.SaveToDb(movies)
 	fmt.Println("Done.")
 }
 

@@ -12,9 +12,9 @@ import (
 	"github.com/zorrokid/go-movies/reader/model"
 )
 
-func ReadMovies() []model.Movie {
+func ReadMovies(path string) []model.Movie {
 
-	csvFile, err := os.Open("data/myynti.csv")
+	csvFile, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
