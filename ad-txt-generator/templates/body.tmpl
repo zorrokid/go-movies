@@ -1,12 +1,33 @@
 
 ===
 {{ .LocalName -}} 
-{{ if and (gt (len .LocalName) 0) (gt (len .OriginalName) 0) -}}
- - 
+{{ if and (gt (len .LocalName) 0) (gt (len .OriginalName) 0) }} / {{ end }}
+{{- .OriginalName }}{{ " " }}
+{{- if gt (len .Directors) 0 -}}
+    /o: {{ index .Directors 0 }} 
 {{- end }}
-{{- .OriginalName }}
 ---
 Hinta: {{ .SalePrice }}
+---
+Toimitusehdot: 
+{{ if eq .DeliveryClass "A" }}
+Toimitusluokka A:
+Toimitusluokka A kohteissa yhteispostitus seuraavasti: 1 kpl 2,60€, 2 kpl 2,60€, 3 kpl 4,10€, 4kpl 4,10€, useampi kuin 4kpl 5,90€. 
+Ei noutoa.
+Toimitusluokan yhteistoimitusta varten kaikissa muissakin kohteissa oltava merkintä vastaavasta toimitusluokasta. Muissa tapauksissa tiedustele yhteispostitus erikseen niin katsotaan edullisin hinta.
+Ilman koteloita jopa yli 10 levyä kansipapereineen yksillä kuluilla.
+{{ end }}
+{{ if eq .DeliveryClass "B" }}
+Toimitusluokka B:
+Toimitusluokka B kohteissa yhteispostitus seuraavasti: 1 kpl 2,60€, 2 kpl 4,10€, useampi kuin 2kpl 5,90€.
+Ei noutoa.
+Toimitusluokan yhteistoimitusta varten kaikissa muissakin kohteissa oltava merkintä vastaavasta toimitusluokasta. Muissa tapauksissa tiedustele yhteispostitus erikseen niin katsotaan edullisin hinta.
+Ilman koteloita jopa yli 10 levyä kansipapereineen yksillä kuluilla.
+{{ end }}
+{{ if eq .DeliveryClass "C" }}
+Toimitusluokka C:
+Toimitus huutopaketissa hintaan 5,90€. Usein samoilla toimituskuluilla painon ja koon puolesta mahtuu muutakin, tiedustele!
+{{ end }}
 ---
 
 {{ if .LocalName -}}
@@ -28,57 +49,59 @@ Levytyyppi: {{ .Format }}
 Vuosi: {{ .Year }}
 {{ if gt (len .Languages) 0 -}}
     Puhutut kielet: {{ AsCommaSeparatedList .Languages }}
-{{ end }}
-{{- if gt (len .Subtitles) 0 -}}
+{{- end }}
+{{ if gt (len .Subtitles) 0 -}}
     Tekstityskielet: {{ AsCommaSeparatedList .Subtitles }}
 {{- end }}
 Julkaisumaa/alue/kansien kieli: {{ .PublicationArea }}
 {{ if .Publication -}}
     Julkaisija: {{ .Publication }}
 {{- end }}
-{{- if .CaseType -}}
+{{ if .CaseType -}}
     Kotelo: {{ .CaseType }}
-{{- end }}
-{{- if .IsRental -}}
-    Vuokrafilmi
-{{- end }}
-{{- if .HasSlipCover -}}
-    Kotelon päällä pahvinen liukukansi
-{{- end }}
-{{- if .IsTwoSidedDisc -}}
-    Kaksipuolinen levy
 {{- end }}
 Levyjen lukumäärä: {{ .Discs }}
 {{ if eq (len .Conditions) 1 -}}
     Levyn kuntoluokitus: {{ index .Conditions 0 }} (**
 {{- else -}}
-    {{ range $i, $e := .Conditions -}}
-        {{- inc $i 1 }}. levyn kuntoluokitus: {{ $e }}
-    {{- end -}}
-{{ end -}}
-Toimitusluokka: {{ .DeliveryClass }} (*
-{{ if .Other -}}
-Muuta: {{ .Other }}
+    Levyjen kuntoluokitukset:
+        {{ range $i, $e := .Conditions -}}
+            {{- inc $i 1 }}. levyn kuntoluokitus: {{ $e }}{{ if eq $i 0 }} (**{{ end }}
+        {{ end -}}
 {{- end }}
+Toimitusluokka: {{ .DeliveryClass }} (*
+{{ if or .Other .IsRental .HasSlipCover .IsTwoSidedDisc -}}
+    Muuta:
+    {{- if .Other }}
+        {{ .Other }}
+    {{- end }}
+    {{ if .IsRental -}}
+        Vuokrafilmi
+    {{- end }}
+    {{ if .HasSlipCover -}}
+        Kotelon päällä pahvinen liukukansi
+    {{- end }}
+    {{ if .IsTwoSidedDisc -}}
+        Kaksipuolinen levy
+    {{- end }}
+{{ end -}}
 
-* = Katso toimitusluokkaan liittyvät yhteistoimitusvaihtoehdot ohesta (kohta "Toimitusehdot")
+* = Katso toimitusluokkaan liittyvät yhteistoimitusvaihtoehdot ohesta (toimituskulujen alla kohta "Toimitusehdot")
 ** = Katso kuntoluokitukset alta
 
 {{ if .IsReadTested -}}
-    Testasin levyn dvdisaster- ja cdck-ohjelmilla, jotka molemmat lukivat levyn ongelmitta. Liitän dvdisaster-lukutuloksesta kuvakappauksen ja cdck-ohjelman tulosteen:
+    Testasin levyn dvdisaster- ja cdck-ohjelmilla, jotka molemmat lukivat levyn ongelmitta. Liitän dvdisaster-lukutuloksesta kuvakappauksen ja cdck-ohjelman tulosteen:<br />
 {{- end }}
 
 <b>Kuntoluokitukseni</b>
-<td>
-<tr><td>10</td><td>Uudenveroinen tai uusi: ei silminnähtäviä jälkiä</td></tr>
-<tr><td>9</td><td>Erinomainen, lähes uudenveroinen: hyvin vähäisiä käytön jälkiä nähtävissä, ei naarmuja</td></tr>
-<tr><td>8</td><td>Hyvä: yksi tai kaksi hyvin vähäistä, lyhyttä ja hentoa hiusnaarmua tai jälkeä</td></tr>
-<tr><td>7</td><td>Hyvän ja tyydyttävän väliltä: jokunen vähäinen, lyhyt tai hento hiusnaarmu tai kevyt hankaumajälki nähtävissä</td></tr>
-<tr><td>6</td><td>Tyydyttävä: joitakin kevyitä naarmuja tai hankaumia tai yksittäinen näkyvämpi naarmu nähtävillä</td></tr>
-<tr><td>5</td><td>Heikko mutta toimiva: jonkun verran näkyvämpää naarmua tai hankaumaa (tämän kuntoluokan levyt yleensä lukutestaan cdck- ja dvdisaster-ohjelmilla ja liitän raportin kohteeseen - kysy tarvittaessa)</td></tr>
-</td>
+10: Uudenveroinen tai uusi: ei silminnähtäviä jälkiä
+9: Erinomainen, lähes uudenveroinen: hyvin vähäisiä käytön jälkiä nähtävissä, ei naarmuja
+8: Hyvä: yksi tai kaksi hyvin vähäistä, lyhyttä ja hentoa hiusnaarmua tai jälkeä
+7: Hyvän ja tyydyttävän väliltä: jokunen vähäinen, lyhyt tai hento hiusnaarmu tai kevyt hankaumajälki nähtävissä
+6: Tyydyttävä: joitakin kevyitä naarmuja tai hankaumia tai yksittäinen näkyvämpi naarmu nähtävillä
+5: Heikko mutta toimiva: jonkun verran näkyvämpää naarmua tai hankaumaa (tämän kuntoluokan levyt yleensä lukutestaan cdck- ja dvdisaster-ohjelmilla ja liitän raportin kohteeseen - kysy tarvittaessa)
 
-Huom! Olen pyrkinyt arvioimaan kaikkien myymieni levyjen kunnon kriittisesti ja myönnän kaikille toimintatakuun. Ilmoitan levyn kunnon edellä olevalla kuntoluokituksella, lisäksi ilmoitan kohteen kuvauksessa mahdollisista muista vaurioista tai puutteista. Tarkastelen levyjen lukupinnan valon heijastusta vasten siten että mahdolliset naarmut erottuvat. Lisäksi pyrin tarkistamaan levyn yläpinnan ja keskirenkaan (onko esim. silmin havaittavia halkeamia) kunnon. Ilmoitan myös jos huomaan kotelossa tai kansipaperissa vaurioita. Elokuvakohteissa ilmoitan myös erikseen jos kyseessä on vuokrapoisto.
+<small><b>Huom!</b> Olen pyrkinyt arvioimaan kaikkien myymieni levyjen kunnon kriittisesti ja myönnän kaikille toimintatakuun. Ilmoitan levyn kunnon edellä olevalla kuntoluokituksella, lisäksi ilmoitan kohteen kuvauksessa mahdollisista muista vaurioista tai puutteista. Tarkastelen levyjen lukupinnan valon heijastusta vasten siten että mahdolliset naarmut erottuvat. Lisäksi pyrin tarkistamaan levyn yläpinnan ja keskirenkaan (onko esim. silmin havaittavia halkeamia) kunnon. Ilmoitan myös jos huomaan kotelossa tai kansipaperissa vaurioita. Elokuvakohteissa ilmoitan myös erikseen jos kyseessä on vuokrapoisto.</small>
 
 <b>Muut kohteeni</b>
 <a href="https://www.huuto.net/haku/sellernro/167382/category/87">DVD-kohteeni</a>
@@ -88,5 +111,4 @@ Huom! Olen pyrkinyt arvioimaan kaikkien myymieni levyjen kunnon kriittisesti ja 
 <a href="https://www.huuto.net/haku/sellernro/167382/category/403">Musiikki-kohteeni</a>
 <a href="https://www.huuto.net/haku/sellernro/167382/category/262">Sarjakuva-, kirja- ja lehtikohteeni</a>
 <a href="https://www.huuto.net/haku/sellernro/167382">Kaikki kohteeni</a>
-
-Kiitos kun katsoit!
+<b>Kiitos mielenkiinnostasi!</b>
