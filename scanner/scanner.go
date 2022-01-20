@@ -4,11 +4,14 @@ import (
 	"github.com/otiai10/gosseract"
 )
 
-func Scan(path string) string {
+type PageDiv struct {
+}
+
+func Scan(path string, languages ...string) ([]gosseract.BoundingBox, error) {
 	client := gosseract.NewClient()
 	defer client.Close()
-	client.SetLanguage("fin")
+	client.SetLanguage(languages...)
 	client.SetImage(path)
-	hocrtext, _ := client.Text() // client.HOCRText()
-	return hocrtext
+	bb, _ := client.GetBoundingBoxes(gosseract.RIL_WORD)
+	return bb, nil
 }
