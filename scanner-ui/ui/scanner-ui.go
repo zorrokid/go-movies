@@ -1,17 +1,14 @@
-package main
+package ui
 
 import (
-	"log"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/storage"
 )
 
 type ScannerUi struct {
-	app    fyne.App
-	window fyne.Window
+	app       fyne.App
+	window    fyne.Window
+	addDialog *AddDialog
 }
 
 func NewScannerUi() *ScannerUi {
@@ -26,24 +23,13 @@ func NewScannerUi() *ScannerUi {
 
 func (ui *ScannerUi) InitAndRun() {
 	ui.window.SetMainMenu(ui.makeMenu(ui.app, ui.window))
+	ui.window.Resize(fyne.NewSize(640, 460))
 	ui.window.ShowAndRun()
 }
 
 func (ui *ScannerUi) makeMenu(a fyne.App, w fyne.Window) *fyne.MainMenu {
 	newItem := fyne.NewMenuItem("New", func() {
-		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
-			if err != nil {
-				dialog.ShowError(err, w)
-				return
-			}
-			if reader == nil {
-				log.Println("Cancelled")
-				return
-			}
-			defer reader.Close()
-		}, w)
-		fd.SetFilter(storage.NewExtensionFileFilter([]string{".png", ".jpg", ".jpeg"}))
-		fd.Show()
+		ui.addDialog.ShowDialog(&w)
 	})
 
 	file := fyne.NewMenu("File", newItem)

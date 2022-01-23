@@ -1,6 +1,8 @@
 package main
 
+import "github.com/zorrokid/go-movies/scanner-ui/ui"
+
 func main() {
-	ui := NewScannerUi()
+	ui := ui.NewScannerUi()
 	ui.InitAndRun()
 }
