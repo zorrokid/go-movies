@@ -5,31 +5,26 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
 type imageWidgetRenderer struct {
 	fyne.WidgetRenderer
-	//	image *canvas.Image
-	//	label *widget.Label
-	// widget  *ImageWidget
-	objects   []fyne.CanvasObject
-	container *fyne.Container
+	//widget  *ImageWidget
+	objects []fyne.CanvasObject
 }
 
 func (r *imageWidgetRenderer) Layout(s fyne.Size) {
-	fmt.Println("Layout")
+	r.objects[0].Resize(s)
 }
 
 func (r *imageWidgetRenderer) MinSize() fyne.Size {
-	return r.container.MinSize()
+	s := fyne.NewSize(500, 500)
+	return s
 }
 
-func (r *imageWidgetRenderer) Refresh() {
-	fmt.Println("Refresh")
-	r.container.Refresh()
-	//canvas.Refresh(r.container)
+func (i *imageWidgetRenderer) Refresh() {
+	i.objects[0].Refresh()
 }
 
 func (r *imageWidgetRenderer) Objects() []fyne.CanvasObject {
@@ -42,41 +37,30 @@ func (r *imageWidgetRenderer) Destroy() {
 
 type ImageWidget struct {
 	widget.BaseWidget
-	reader   fyne.URIReadCloser
-	OnTapped func(event *fyne.PointEvent)
+	image *canvas.Image
 }
 
-func NewImageWidget(reader fyne.URIReadCloser) *ImageWidget {
+func NewImageWidget(image *canvas.Image) *ImageWidget {
 	i := &ImageWidget{
-		reader:   reader,
-		OnTapped: onTapped,
+		image: image,
 	}
 	i.ExtendBaseWidget(i)
 	return i
 }
 
-func onTapped(event *fyne.PointEvent) {
+func (i *ImageWidget) Tapped(event *fyne.PointEvent) {
+	fmt.Printf("Tapped %f %f", event.Position.X, event.Position.Y)
+}
+
+func (i *ImageWidget) TappedSecondary(event *fyne.PointEvent) {
 	fmt.Printf("Tapped %f %f", event.Position.X, event.Position.Y)
 }
 
 func (i *ImageWidget) CreateRenderer() fyne.WidgetRenderer {
 	i.ExtendBaseWidget(i)
-
-	//image := loadImage(i.reader)
-	image := canvas.NewImageFromReader(i.reader, "test")
-	image.Resize(fyne.NewSize(600, 600))
-	image.FillMode = canvas.ImageFillOriginal
-	// label := widget.NewLabel("Hello")
-	// label2 := widget.NewLabel("Hello")
-	container := container.NewHBox(image)
-	//container.Add(label2)
-	container.Resize(fyne.NewSize(500, 500))
-	objects := []fyne.CanvasObject{container}
+	objects := []fyne.CanvasObject{i.image}
 	r := &imageWidgetRenderer{
-		//label:     label,
-		//image:     image,
-		objects:   objects,
-		container: container,
+		objects: objects,
 	}
 	return r
 }
