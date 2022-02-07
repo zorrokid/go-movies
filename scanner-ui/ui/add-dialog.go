@@ -1,7 +1,11 @@
 package ui
 
 import (
+	"fmt"
+	"image"
+	_ "image/jpeg"
 	"log"
+	"os"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -10,6 +14,8 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
+	"github.com/zorrokid/go-movies/scanner"
+	"github.com/zorrokid/go-movies/scanner-ui/util"
 )
 
 type AddDialog struct {
@@ -17,17 +23,17 @@ type AddDialog struct {
 	mainWindow     *fyne.Window
 	scanWindow     fyne.Window
 	app            fyne.App
+	text           *widget.Entry
 }
 
 func NewAddDialog(w *fyne.Window, app fyne.App) *AddDialog {
-	container := container.New(layout.NewBorderLayout(nil, nil, nil, nil))
-
+	text := widget.NewEntry()
 	scanWindow := app.NewWindow("Scan new item")
 	dialog := &AddDialog{
-		imageContainer: container,
-		mainWindow:     w,
-		app:            app,
-		scanWindow:     scanWindow,
+		mainWindow: w,
+		app:        app,
+		scanWindow: scanWindow,
+		text:       text,
 	}
 	return dialog
 }
@@ -44,9 +50,48 @@ func (d *AddDialog) setImage(reader fyne.URIReadCloser, err error) {
 	}
 	defer reader.Close()
 
-	image := canvas.NewImageFromReader(reader, "test")
-	imageWidget := NewImageWidget(image)
-	d.imageContainer.Add(imageWidget)
+	filePath := reader.URI().Path()
+
+	if bbs, err := scanner.Scan(filePath, "fin"); err != nil {
+		log.Fatal(err)
+	} else {
+
+		imgFile, err := os.Open(filePath)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		defer imgFile.Close()
+
+		imgConfig, imgType, err := image.DecodeConfig(imgFile)
+
+		fmt.Printf("image type %s\n", imgType)
+		fmt.Printf("image %d x %d\n", imgConfig.Width, imgConfig.Height)
+
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		rects := make([]image.Rectangle, len(bbs))
+		for _, r := range bbs {
+			rects = append(rects, r.Box)
+		}
+
+		img, err := util.ReadImage(filePath)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		img2 := util.DrawBoxes(img, rects)
+
+		image := canvas.NewImageFromImage(img2)
+		//image := canvas.NewImageFromReader(reader, "test")
+		image.FillMode = canvas.ImageFillContain
+		imageWidget := NewImageWidget(image, bbs, imgConfig)
+		d.imageContainer.Add(imageWidget)
+	}
+
 }
 
 func (d *AddDialog) createFileDialogButton() *widget.Button {
@@ -61,11 +106,9 @@ func (d *AddDialog) ShowDialog() {
 
 	selectImageButton := d.createFileDialogButton()
 
-	content := container.New(layout.NewBorderLayout(selectImageButton, nil, nil, nil), selectImageButton, d.imageContainer)
+	content := container.New(layout.NewBorderLayout(selectImageButton, nil, nil, nil), selectImageButton)
+	d.imageContainer = content
 
-	content.Resize(fyne.NewSize(800, 800))
-
-	d.scanWindow.SetContent(content)
-	d.scanWindow.Resize(fyne.NewSize(800, 800))
+	d.scanWindow.SetContent(d.imageContainer)
 	d.scanWindow.Show()
 }
