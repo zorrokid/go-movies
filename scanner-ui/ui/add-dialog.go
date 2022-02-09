@@ -89,8 +89,12 @@ func (d *AddDialog) setImage(reader fyne.URIReadCloser, err error) {
 		//image := canvas.NewImageFromReader(reader, "test")
 		image.FillMode = canvas.ImageFillContain
 		imageWidget := NewImageWidget(image, bbs, imgConfig, d.selected)
-		d.imageContainer.Add(imageWidget)
-		d.imageContainer.Add(widget.NewLabel("Test"))
+		imageWidget.Resize(fyne.NewSize(800, 500))
+		scroll := container.NewScroll(imageWidget)
+		scroll.Resize(fyne.NewSize(1800, 1500))
+		label := widget.NewLabel("Test")
+		layout := container.NewAdaptiveGrid(2, scroll, label)
+		d.imageContainer.Add(layout)
 	}
 
 }
@@ -107,7 +111,13 @@ func (d *AddDialog) ShowDialog() {
 
 	selectImageButton := d.createFileDialogButton()
 
-	content := container.New(layout.NewBorderLayout(selectImageButton, nil, nil, nil), selectImageButton)
+	labelA := widget.NewLabel("A")
+	labelB := widget.NewLabel("B")
+	labelC := widget.NewLabel("C")
+	labelD := widget.NewLabel("D")
+
+	content := container.New(layout.NewBorderLayout(selectImageButton, labelA, labelB, labelC),
+		selectImageButton, labelA, labelB, labelC, labelD)
 	d.imageContainer = content
 
 	// fieldsForm := container.New(layout.NewFormLayout())
