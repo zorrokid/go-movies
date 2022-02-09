@@ -29,7 +29,7 @@ func DrawBoxes(img image.Image, rects []image.Rectangle) image.Image {
 	m := image.NewRGBA(img.Bounds())
 	draw.Draw(m, m.Bounds(), img, image.Point{0, 0}, draw.Src)
 
-	blue := color.RGBA{0, 0, 255, 255}
+	blue := color.RGBA{0, 0, 255, 80}
 
 	for _, r := range rects {
 		m1 := image.NewNRGBA(r)

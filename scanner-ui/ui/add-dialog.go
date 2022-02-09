@@ -73,23 +73,24 @@ func (d *AddDialog) setImage(reader fyne.URIReadCloser, err error) {
 			return
 		}
 
-		rects := make([]image.Rectangle, len(bbs))
-		for _, r := range bbs {
-			rects = append(rects, r.Box)
-		}
+		// rects := make([]image.Rectangle, len(bbs))
+		// for _, r := range bbs {
+		// 	rects = append(rects, r.Box)
+		// }
 
 		img, err := util.ReadImage(filePath)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
-		img2 := util.DrawBoxes(img, rects)
+		//img2 := util.DrawBoxes(img, rects)
 
-		image := canvas.NewImageFromImage(img2)
+		image := canvas.NewImageFromImage(img)
 		//image := canvas.NewImageFromReader(reader, "test")
 		image.FillMode = canvas.ImageFillContain
-		imageWidget := NewImageWidget(image, bbs, imgConfig)
+		imageWidget := NewImageWidget(image, bbs, imgConfig, d.selected)
 		d.imageContainer.Add(imageWidget)
+		d.imageContainer.Add(widget.NewLabel("Test"))
 	}
 
 }
@@ -109,6 +110,24 @@ func (d *AddDialog) ShowDialog() {
 	content := container.New(layout.NewBorderLayout(selectImageButton, nil, nil, nil), selectImageButton)
 	d.imageContainer = content
 
+	// fieldsForm := container.New(layout.NewFormLayout())
+	// label := widget.NewLabel("Title")
+	// fieldsForm.Add(label)
+	// fieldsForm.Add(d.text)
+
+	// addForm := container.New(layout.NewHBoxLayout())
+
+	// content := container.New(layout.NewVBoxLayout())
+	// content.Add(selectImageButton)
+	// d.imageContainer = content
+
+	// //addForm.Add(d.imageContainer)
+	// addForm.Add(fieldsForm)
+
 	d.scanWindow.SetContent(d.imageContainer)
 	d.scanWindow.Show()
+}
+
+func (d *AddDialog) selected(word string) {
+	fmt.Printf("Word %s selected\n", word)
 }
