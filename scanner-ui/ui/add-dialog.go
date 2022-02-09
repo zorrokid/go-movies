@@ -73,28 +73,17 @@ func (d *AddDialog) setImage(reader fyne.URIReadCloser, err error) {
 			return
 		}
 
-		// rects := make([]image.Rectangle, len(bbs))
-		// for _, r := range bbs {
-		// 	rects = append(rects, r.Box)
-		// }
-
 		img, err := util.ReadImage(filePath)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
-		//img2 := util.DrawBoxes(img, rects)
 
 		image := canvas.NewImageFromImage(img)
-		//image := canvas.NewImageFromReader(reader, "test")
 		image.FillMode = canvas.ImageFillContain
 		imageWidget := NewImageWidget(image, bbs, imgConfig, d.selected)
 		imageWidget.Resize(fyne.NewSize(800, 500))
-		scroll := container.NewScroll(imageWidget)
-		scroll.Resize(fyne.NewSize(1800, 1500))
-		label := widget.NewLabel("Test")
-		layout := container.NewAdaptiveGrid(2, scroll, label)
-		d.imageContainer.Add(layout)
+		d.imageContainer.Add(imageWidget)
 	}
 
 }
@@ -118,26 +107,25 @@ func (d *AddDialog) ShowDialog() {
 
 	content := container.New(layout.NewBorderLayout(selectImageButton, labelA, labelB, labelC),
 		selectImageButton, labelA, labelB, labelC, labelD)
+
 	d.imageContainer = content
 
-	// fieldsForm := container.New(layout.NewFormLayout())
-	// label := widget.NewLabel("Title")
-	// fieldsForm.Add(label)
-	// fieldsForm.Add(d.text)
+	scroll := container.NewScroll(d.imageContainer)
+	scroll.Resize(fyne.NewSize(1800, 1500))
 
-	// addForm := container.New(layout.NewHBoxLayout())
+	fieldsForm := container.New(layout.NewFormLayout())
+	label := widget.NewLabel("Title")
+	fieldsForm.Add(label)
+	fieldsForm.Add(d.text)
 
-	// content := container.New(layout.NewVBoxLayout())
-	// content.Add(selectImageButton)
-	// d.imageContainer = content
+	grid := container.NewAdaptiveGrid(2, d.imageContainer, fieldsForm)
 
-	// //addForm.Add(d.imageContainer)
-	// addForm.Add(fieldsForm)
-
-	d.scanWindow.SetContent(d.imageContainer)
+	d.scanWindow.SetContent(grid)
 	d.scanWindow.Show()
 }
 
 func (d *AddDialog) selected(word string) {
+	d.text.Text += word
+	d.text.Refresh()
 	fmt.Printf("Word %s selected\n", word)
 }
