@@ -6,6 +6,7 @@ import (
 	_ "image/jpeg"
 	"log"
 	"os"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -27,7 +28,7 @@ type AddDialog struct {
 }
 
 func NewAddDialog(w *fyne.Window, app fyne.App) *AddDialog {
-	text := widget.NewEntry()
+	text := widget.NewMultiLineEntry()
 	scanWindow := app.NewWindow("Scan new item")
 	dialog := &AddDialog{
 		mainWindow: w,
@@ -124,8 +125,11 @@ func (d *AddDialog) ShowDialog() {
 	d.scanWindow.Show()
 }
 
-func (d *AddDialog) selected(word string) {
-	d.text.Text += word
+func (d *AddDialog) selected(word []string) {
+	if len(d.text.Text) > 0 {
+		d.text.Text += " "
+	}
+	d.text.Text += strings.Join(word, " ")
 	d.text.Refresh()
 	fmt.Printf("Word %s selected\n", word)
 }
