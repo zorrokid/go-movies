@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"fyne.io/fyne/theme"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -100,14 +101,9 @@ func (d *AddDialog) createFileDialogButton() *widget.Button {
 }
 
 func (d *AddDialog) ShowDialog() {
-
-	selectImageButton := d.createFileDialogButton()
-
-	content := container.New(layout.NewBorderLayout(selectImageButton, nil, nil, nil),
-		selectImageButton)
-
+	content := container.New(layout.NewBorderLayout(nil, nil, nil, nil))
 	d.imageContainer = content
-
+	d.imageContainer.Resize(fyne.NewSize(1800, 1500))
 	scroll := container.NewScroll(d.imageContainer)
 	scroll.Resize(fyne.NewSize(1800, 1500))
 
@@ -118,10 +114,48 @@ func (d *AddDialog) ShowDialog() {
 	fieldsForm.Add(d.text)
 	fieldsForm.Add(clearBtn)
 
-	grid := container.NewAdaptiveGrid(2, d.imageContainer, fieldsForm)
+	grid := container.NewAdaptiveGrid(3, d.createFileList(), scroll, fieldsForm)
 
 	d.scanWindow.SetContent(grid)
 	d.scanWindow.Show()
+}
+
+func (d *AddDialog) createFileList() fyne.CanvasObject {
+
+	// icon := widget.NewIcon(nil)
+	// label := widget.NewLabel("Select An Item From The List")
+	// hbox := container.NewHBox(icon, label)
+
+	data := make([]string, 1000)
+	list := widget.NewList(
+		func() int {
+			return len(data)
+		},
+		func() fyne.CanvasObject {
+			return container.NewHBox(widget.NewIcon(theme.DocumentIcon()), widget.NewLabel("Template Object"))
+		},
+		func(id widget.ListItemID, item fyne.CanvasObject) {
+			item.(*fyne.Container).Objects[1].(*widget.Label).SetText(data[id])
+		},
+	)
+
+	list.OnSelected = func(id widget.ListItemID) {
+		// label.SetText(data[id])
+		// icon.SetResource(theme.DocumentIcon())
+	}
+	list.OnUnselected = func(id widget.ListItemID) {
+		// label.SetText("Select An Item From The List")
+		// icon.SetResource(nil)
+	}
+
+	selectImageButton := d.createFileDialogButton()
+	selectImageButton.Resize(fyne.NewSize(100, 100))
+	content := container.New(layout.NewBorderLayout(selectImageButton, nil, nil, nil),
+		selectImageButton)
+	list.Resize(fyne.NewSize(100, 100))
+	content.Add(list)
+
+	return content
 }
 
 func (d *AddDialog) clearText() {
