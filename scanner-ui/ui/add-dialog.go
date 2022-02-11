@@ -29,6 +29,8 @@ type AddDialog struct {
 
 func NewAddDialog(w *fyne.Window, app fyne.App) *AddDialog {
 	text := widget.NewMultiLineEntry()
+	text.MultiLine = true
+	text.Wrapping = fyne.TextWrapBreak
 	scanWindow := app.NewWindow("Scan new item")
 	dialog := &AddDialog{
 		mainWindow: w,
@@ -101,28 +103,30 @@ func (d *AddDialog) ShowDialog() {
 
 	selectImageButton := d.createFileDialogButton()
 
-	labelA := widget.NewLabel("A")
-	labelB := widget.NewLabel("B")
-	labelC := widget.NewLabel("C")
-	labelD := widget.NewLabel("D")
-
-	content := container.New(layout.NewBorderLayout(selectImageButton, labelA, labelB, labelC),
-		selectImageButton, labelA, labelB, labelC, labelD)
+	content := container.New(layout.NewBorderLayout(selectImageButton, nil, nil, nil),
+		selectImageButton)
 
 	d.imageContainer = content
 
 	scroll := container.NewScroll(d.imageContainer)
 	scroll.Resize(fyne.NewSize(1800, 1500))
 
-	fieldsForm := container.New(layout.NewFormLayout())
+	fieldsForm := container.New(layout.NewGridLayoutWithColumns(3))
 	label := widget.NewLabel("Title")
+	clearBtn := widget.NewButton("Clear", d.clearText)
 	fieldsForm.Add(label)
 	fieldsForm.Add(d.text)
+	fieldsForm.Add(clearBtn)
 
 	grid := container.NewAdaptiveGrid(2, d.imageContainer, fieldsForm)
 
 	d.scanWindow.SetContent(grid)
 	d.scanWindow.Show()
+}
+
+func (d *AddDialog) clearText() {
+	d.text.Text = ""
+	d.text.Refresh()
 }
 
 func (d *AddDialog) selected(word []string) {
