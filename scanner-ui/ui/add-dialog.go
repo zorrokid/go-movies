@@ -29,6 +29,7 @@ type AddDialog struct {
 	fileListData   []fyne.URI
 	fileList       *widget.List
 	imageWidget    *ImageWidget
+	progressBar    *widget.ProgressBarInfinite
 }
 
 func NewAddDialog(w *fyne.Window, app fyne.App) *AddDialog {
@@ -36,11 +37,14 @@ func NewAddDialog(w *fyne.Window, app fyne.App) *AddDialog {
 	text.MultiLine = true
 	text.Wrapping = fyne.TextWrapBreak
 	scanWindow := app.NewWindow("Scan new item")
+	progressBar := widget.NewProgressBarInfinite()
+	progressBar.Stop()
 	dialog := &AddDialog{
-		mainWindow: w,
-		app:        app,
-		scanWindow: scanWindow,
-		text:       text,
+		mainWindow:  w,
+		app:         app,
+		scanWindow:  scanWindow,
+		text:        text,
+		progressBar: progressBar,
 	}
 	return dialog
 }
@@ -78,7 +82,7 @@ func (d *AddDialog) setSelectedImage(i int) {
 }
 
 func (d *AddDialog) setImage(uri fyne.URI) {
-
+	d.progressBar.Start()
 	filePath := uri.Path()
 
 	img, err := util.ReadImage(filePath)
@@ -107,6 +111,7 @@ func (d *AddDialog) setImage(uri fyne.URI) {
 	} else {
 		d.imageWidget.SetBoxes(&bbs)
 	}
+	d.progressBar.Stop()
 }
 
 func (d *AddDialog) createFileDialogButton() *widget.Button {
@@ -121,7 +126,7 @@ func (d *AddDialog) ShowDialog() {
 	d.imageWidget = NewImageWidget(d.selected)
 
 	d.fileList = d.createFileList()
-	content := container.New(layout.NewBorderLayout(nil, nil, nil, nil))
+	content := container.New(layout.NewBorderLayout(nil, d.progressBar, nil, nil), d.progressBar)
 	content.Add(d.imageWidget)
 	d.imageContainer = content
 	d.imageContainer.Resize(fyne.NewSize(1800, 1500))
