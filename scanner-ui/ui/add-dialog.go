@@ -28,6 +28,7 @@ type AddDialog struct {
 	text           *widget.Entry
 	fileListData   []fyne.URI
 	fileList       *widget.List
+	imageWidget    *ImageWidget
 }
 
 func NewAddDialog(w *fyne.Window, app fyne.App) *AddDialog {
@@ -80,38 +81,54 @@ func (d *AddDialog) setImage(uri fyne.URI) {
 
 	filePath := uri.Path()
 
+	img, err := util.ReadImage(filePath)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	imgFile, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer imgFile.Close()
+
+	imgConfig, _, err := image.DecodeConfig(imgFile)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	d.imageWidget.SetImage(canvas.NewImageFromImage(img), imgConfig)
+
 	if bbs, err := scanner.Scan(filePath, "fin"); err != nil {
 		log.Fatal(err)
 	} else {
+		d.imageWidget.SetBoxes(&bbs)
 
-		imgFile, err := os.Open(filePath)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-		defer imgFile.Close()
+		// imgFile, err := os.Open(filePath)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// 	return
+		// }
+		// defer imgFile.Close()
 
-		imgConfig, imgType, err := image.DecodeConfig(imgFile)
+		// imgConfig, imgType, err := image.DecodeConfig(imgFile)
 
-		fmt.Printf("image type %s\n", imgType)
-		fmt.Printf("image %d x %d\n", imgConfig.Width, imgConfig.Height)
+		// fmt.Printf("image type %s\n", imgType)
+		// fmt.Printf("image %d x %d\n", imgConfig.Width, imgConfig.Height)
 
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
+		// if err != nil {
+		// 	log.Fatal(err)
+		// 	return
+		// }
 
-		img, err := util.ReadImage(filePath)
-		if err != nil {
-			log.Fatal(err)
-			return
-		}
-
-		image := canvas.NewImageFromImage(img)
-		image.FillMode = canvas.ImageFillContain
-		imageWidget := NewImageWidget(image, bbs, imgConfig, d.selected)
-		imageWidget.Resize(fyne.NewSize(800, 500))
-		d.imageContainer.Add(imageWidget)
+		// image := canvas.NewImageFromImage(img)
+		// image.FillMode = canvas.ImageFillContain
+		//imageWidget := NewImageWidget(image, bbs, imgConfig, d.selected)
+		//imageWidget.Resize(fyne.NewSize(800, 500))
+		//d.imageContainer.Add(imageWidget)
 	}
 
 }
@@ -124,8 +141,12 @@ func (d *AddDialog) createFileDialogButton() *widget.Button {
 }
 
 func (d *AddDialog) ShowDialog() {
+
+	d.imageWidget = NewImageWidget(d.selected)
+
 	d.fileList = d.createFileList()
 	content := container.New(layout.NewBorderLayout(nil, nil, nil, nil))
+	content.Add(d.imageWidget)
 	d.imageContainer = content
 	d.imageContainer.Resize(fyne.NewSize(1800, 1500))
 	scroll := container.NewScroll(d.imageContainer)

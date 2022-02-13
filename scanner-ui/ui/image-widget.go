@@ -18,28 +18,60 @@ const Scale = 4
 
 type imageWidgetRenderer struct {
 	fyne.WidgetRenderer
-	objects []fyne.CanvasObject
-	boxes   []gosseract.BoundingBox
+	objects *[]fyne.CanvasObject
+	widget  *ImageWidget
 }
 
 func (r *imageWidgetRenderer) Layout(s fyne.Size) {
 	fmt.Println("Layout")
-	r.objects[0].Move(fyne.NewPos(0, 0))
-	r.objects[0].Resize(s)
+	// (*r.objects)[0].Move(fyne.NewPos(0, 0))
+	// (*r.objects)[0].Resize(s)
 }
 
 func (r *imageWidgetRenderer) MinSize() fyne.Size {
-	return r.objects[0].MinSize()
+
+	minSize := fyne.NewSize(
+		float32(r.widget.ImageConfig.Width)/Scale,
+		float32(r.widget.ImageConfig.Height)/Scale,
+	)
+	return minSize
 }
 
-func (i *imageWidgetRenderer) Refresh() {
+func (r *imageWidgetRenderer) Refresh() {
 	fmt.Println("Refresh")
-	i.objects[0].Move(fyne.NewPos(0, 0))
-	i.objects[0].Refresh()
+
+	objects := []fyne.CanvasObject{}
+
+	if r.widget.Image != nil {
+		imageContainer := container.NewWithoutLayout(r.widget.Image)
+		r.widget.Image.Move(fyne.NewPos(0, 0))
+		s := fyne.NewSize(float32(r.widget.ImageConfig.Width)/Scale, float32(r.widget.ImageConfig.Height)/Scale)
+		r.widget.Image.Resize(s)
+		objects = append(objects, imageContainer)
+	}
+
+	if r.widget.Boxes != nil {
+		for _, bb := range *r.widget.Boxes {
+			rect := bb.Box
+			marker := canvas.NewRectangle(color.RGBA{
+				R: 1,
+				G: 50,
+				B: 12,
+				A: 50,
+			})
+			s := fyne.NewSize(float32(rect.Max.X-rect.Min.X)/Scale, float32(rect.Max.Y-rect.Min.Y)/Scale)
+			marker.Resize(s)
+			pos := fyne.NewPos(float32(rect.Min.X)/Scale, float32(rect.Min.Y)/Scale)
+			marker.Move(pos)
+			objects = append(objects, marker)
+		}
+	}
+
+	r.objects = &objects
 }
 
 func (r *imageWidgetRenderer) Objects() []fyne.CanvasObject {
-	return r.objects
+	return *r.objects
 }
 
 func (r *imageWidgetRenderer) Destroy() {
@@ -48,22 +80,30 @@ func (r *imageWidgetRenderer) Destroy() {
 
 type ImageWidget struct {
 	widget.BaseWidget
-	image       *canvas.Image
-	boxes       []gosseract.BoundingBox
-	imageConfig image.Config
+	Image       *canvas.Image
+	Boxes       *[]gosseract.BoundingBox
+	ImageConfig image.Config
 	selected    func(words []string)
 	tap         *fyne.Position
 }
 
-func NewImageWidget(image *canvas.Image, boxes []gosseract.BoundingBox, imageConfig image.Config, selected func(word []string)) *ImageWidget {
+func NewImageWidget(selected func(word []string)) *ImageWidget {
 	i := &ImageWidget{
-		image:       image,
-		boxes:       boxes,
-		imageConfig: imageConfig,
-		selected:    selected,
+		selected: selected,
 	}
 	i.ExtendBaseWidget(i)
 	return i
+}
+
+func (i *ImageWidget) SetImage(image *canvas.Image, config image.Config) {
+	i.Image = image
+	i.ImageConfig = config
+	i.Refresh()
+}
+
+func (i *ImageWidget) SetBoxes(boxes *[]gosseract.BoundingBox) {
+	i.Boxes = boxes
+	i.Refresh()
 }
 
 func (i *ImageWidget) Tapped(event *fyne.PointEvent) {
@@ -71,7 +111,7 @@ func (i *ImageWidget) Tapped(event *fyne.PointEvent) {
 	positionX := event.Position.X * Scale
 	positionY := event.Position.Y * Scale
 
-	for _, b := range i.boxes {
+	for _, b := range *i.Boxes {
 		if positionX > float32(b.Box.Min.X) && positionX < float32(b.Box.Max.X) && positionY > float32(b.Box.Min.Y) && positionY < float32(b.Box.Max.Y) {
 			words := make([]string, 1)
 			words[0] = b.Word
@@ -102,7 +142,7 @@ func (i *ImageWidget) getWordsBetween(posA fyne.Position, posB fyne.Position) []
 	maxY := math.Max(float64(posA.Y), float64(posB.Y)) * Scale
 
 	words := make([]string, 5)
-	for _, b := range i.boxes {
+	for _, b := range *i.Boxes {
 		bMinX := float64(b.Box.Min.X)
 		bMaxX := float64(b.Box.Max.X)
 		bMinY := float64(b.Box.Min.Y)
@@ -120,30 +160,36 @@ func (i *ImageWidget) getWordsBetween(posA fyne.Position, posB fyne.Position) []
 func (i *ImageWidget) CreateRenderer() fyne.WidgetRenderer {
 	i.ExtendBaseWidget(i)
 
-	imageContainer := container.NewWithoutLayout(i.image)
-	i.image.Move(fyne.NewPos(0, 0))
-	s := fyne.NewSize(float32(i.imageConfig.Width)/Scale, float32(i.imageConfig.Height)/Scale)
-	i.image.Resize(s)
-	objects := []fyne.CanvasObject{imageContainer}
+	objects := []fyne.CanvasObject{}
 
-	for _, bb := range i.boxes {
-		rect := bb.Box
-		marker := canvas.NewRectangle(color.RGBA{
-			R: 1,
-			G: 50,
-			B: 12,
-			A: 50,
-		})
-		s := fyne.NewSize(float32(rect.Max.X-rect.Min.X)/Scale, float32(rect.Max.Y-rect.Min.Y)/Scale)
-		marker.Resize(s)
-		pos := fyne.NewPos(float32(rect.Min.X)/Scale, float32(rect.Min.Y)/Scale)
-		marker.Move(pos)
-		objects = append(objects, marker)
+	if i.Image != nil {
+		imageContainer := container.NewWithoutLayout(i.Image)
+		i.Image.Move(fyne.NewPos(0, 0))
+		s := fyne.NewSize(float32(i.ImageConfig.Width)/Scale, float32(i.ImageConfig.Height)/Scale)
+		i.Image.Resize(s)
+		objects = append(objects, imageContainer)
+	}
+
+	if i.Boxes != nil {
+		for _, bb := range *i.Boxes {
+			rect := bb.Box
+			marker := canvas.NewRectangle(color.RGBA{
+				R: 1,
+				G: 50,
+				B: 12,
+				A: 50,
+			})
+			s := fyne.NewSize(float32(rect.Max.X-rect.Min.X)/Scale, float32(rect.Max.Y-rect.Min.Y)/Scale)
+			marker.Resize(s)
+			pos := fyne.NewPos(float32(rect.Min.X)/Scale, float32(rect.Min.Y)/Scale)
+			marker.Move(pos)
+			objects = append(objects, marker)
+		}
 	}
 
 	r := &imageWidgetRenderer{
-		objects: objects,
-		boxes:   i.boxes,
+		objects: &objects,
+		widget:  i,
 	}
 	return r
 }
