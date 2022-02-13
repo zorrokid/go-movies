@@ -162,31 +162,6 @@ func (i *ImageWidget) CreateRenderer() fyne.WidgetRenderer {
 
 	objects := []fyne.CanvasObject{}
 
-	if i.Image != nil {
-		imageContainer := container.NewWithoutLayout(i.Image)
-		i.Image.Move(fyne.NewPos(0, 0))
-		s := fyne.NewSize(float32(i.ImageConfig.Width)/Scale, float32(i.ImageConfig.Height)/Scale)
-		i.Image.Resize(s)
-		objects = append(objects, imageContainer)
-	}
-
-	if i.Boxes != nil {
-		for _, bb := range *i.Boxes {
-			rect := bb.Box
-			marker := canvas.NewRectangle(color.RGBA{
-				R: 1,
-				G: 50,
-				B: 12,
-				A: 50,
-			})
-			s := fyne.NewSize(float32(rect.Max.X-rect.Min.X)/Scale, float32(rect.Max.Y-rect.Min.Y)/Scale)
-			marker.Resize(s)
-			pos := fyne.NewPos(float32(rect.Min.X)/Scale, float32(rect.Min.Y)/Scale)
-			marker.Move(pos)
-			objects = append(objects, marker)
-		}
-	}
-
 	r := &imageWidgetRenderer{
 		objects: &objects,
 		widget:  i,
