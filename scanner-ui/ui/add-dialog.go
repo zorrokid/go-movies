@@ -30,7 +30,7 @@ type AddDialog struct {
 	progressBar    *widget.ProgressBarInfinite
 }
 
-func NewAddDialog(w *fyne.Window, app *fyne.App) *AddDialog {
+func NewAddDialog(app *fyne.App) *AddDialog {
 	text := widget.NewMultiLineEntry()
 	text.MultiLine = true
 	text.Wrapping = fyne.TextWrapBreak

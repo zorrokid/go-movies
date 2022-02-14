@@ -12,9 +12,9 @@ type ScannerUi struct {
 }
 
 func NewScannerUi() *ScannerUi {
-	app := app.New()
+	app := app.NewWithID("github.com/zorrokid/go-movies/scanner-ui")
 	window := app.NewWindow("Go-Movie!")
-	addDialog := NewAddDialog(&window, app)
+	addDialog := NewAddDialog(&app)
 	ui := &ScannerUi{
 		app:       app,
 		window:    window,
