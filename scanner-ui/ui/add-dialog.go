@@ -25,7 +25,6 @@ type AddDialog struct {
 	scanWindow     fyne.Window
 	text           *widget.Entry
 	fileListData   []fyne.URI
-	fileList       *widget.List
 	imageWidget    *ImageWidget
 	progressBar    *widget.ProgressBarInfinite
 }
@@ -38,9 +37,10 @@ func NewAddDialog(app *fyne.App) *AddDialog {
 	progressBar := widget.NewProgressBarInfinite()
 	progressBar.Stop()
 	dialog := &AddDialog{
-		scanWindow:  scanWindow,
-		text:        text,
-		progressBar: progressBar,
+		scanWindow:   scanWindow,
+		text:         text,
+		progressBar:  progressBar,
+		fileListData: []fyne.URI{},
 	}
 	return dialog
 }
@@ -65,7 +65,6 @@ func (d *AddDialog) readFiles(lu fyne.ListableURI, err error) {
 	}
 
 	d.fileListData = uriListImages
-	d.fileList.Refresh()
 }
 
 func (d *AddDialog) setSelectedImage(i int) {
@@ -120,7 +119,6 @@ func (d *AddDialog) ShowDialog() {
 
 	d.imageWidget = NewImageWidget(d.selected)
 
-	d.fileList = d.createFileList()
 	content := container.New(layout.NewBorderLayout(nil, d.progressBar, nil, nil), d.progressBar)
 	content.Add(d.imageWidget)
 	d.imageContainer = content
@@ -167,12 +165,14 @@ func (d *AddDialog) createFileList() *widget.List {
 }
 
 func (d *AddDialog) createFileListContainer() fyne.CanvasObject {
-	d.fileListData = make([]fyne.URI, 0)
+
 	selectImageButton := d.createFileDialogButton()
 	selectImageButton.Resize(fyne.NewSize(100, 100))
 	content := container.New(layout.NewBorderLayout(selectImageButton, nil, nil, nil),
 		selectImageButton)
-	content.Add(d.fileList)
+
+	fileList := d.createFileList()
+	content.Add(fileList)
 	return content
 }
 
