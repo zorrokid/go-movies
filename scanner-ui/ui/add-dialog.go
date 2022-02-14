@@ -22,9 +22,7 @@ import (
 
 type AddDialog struct {
 	imageContainer *fyne.Container
-	mainWindow     *fyne.Window
 	scanWindow     fyne.Window
-	app            fyne.App
 	text           *widget.Entry
 	fileListData   []fyne.URI
 	fileList       *widget.List
@@ -32,16 +30,14 @@ type AddDialog struct {
 	progressBar    *widget.ProgressBarInfinite
 }
 
-func NewAddDialog(w *fyne.Window, app fyne.App) *AddDialog {
+func NewAddDialog(w *fyne.Window, app *fyne.App) *AddDialog {
 	text := widget.NewMultiLineEntry()
 	text.MultiLine = true
 	text.Wrapping = fyne.TextWrapBreak
-	scanWindow := app.NewWindow("Scan new item")
+	scanWindow := (*app).NewWindow("Scan new item")
 	progressBar := widget.NewProgressBarInfinite()
 	progressBar.Stop()
 	dialog := &AddDialog{
-		mainWindow:  w,
-		app:         app,
 		scanWindow:  scanWindow,
 		text:        text,
 		progressBar: progressBar,
@@ -52,7 +48,7 @@ func NewAddDialog(w *fyne.Window, app fyne.App) *AddDialog {
 func (d *AddDialog) readFiles(lu fyne.ListableURI, err error) {
 
 	if err != nil {
-		dialog.ShowError(err, *d.mainWindow)
+		dialog.ShowError(err, d.scanWindow)
 		return
 	}
 	uriList, err := lu.List()
@@ -63,7 +59,6 @@ func (d *AddDialog) readFiles(lu fyne.ListableURI, err error) {
 
 	uriListImages := make([]fyne.URI, 0)
 	for _, uri := range uriList {
-		fmt.Printf("file: %s, extension: %s\n", uri.Name(), uri.Extension())
 		if uri.Extension() == ".jpg" || uri.Extension() == ".jpeg" {
 			uriListImages = append(uriListImages, uri)
 		}
@@ -74,7 +69,7 @@ func (d *AddDialog) readFiles(lu fyne.ListableURI, err error) {
 }
 
 func (d *AddDialog) setSelectedImage(i int) {
-	if i > len(d.fileListData)+1 {
+	if i >= len(d.fileListData) {
 		dialog.ShowError(errors.New("selected index out of bounds"), d.scanWindow)
 	}
 	selectedImageURI := d.fileListData[i]
@@ -165,11 +160,8 @@ func (d *AddDialog) createFileList() *widget.List {
 
 	list.OnSelected = d.setSelectedImage
 	list.OnUnselected = func(id widget.ListItemID) {
-		// label.SetText("Select An Item From The List")
-		// icon.SetResource(nil)
+		fmt.Println("OnUnselected")
 	}
-
-	list.Resize(fyne.NewSize(100, 100))
 
 	return list
 }
