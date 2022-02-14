@@ -51,6 +51,11 @@ func (d *AddDialog) readFiles(lu fyne.ListableURI, err error) {
 		dialog.ShowError(err, d.scanWindow)
 		return
 	}
+
+	if lu == nil {
+		return
+	}
+
 	uriList, err := lu.List()
 	if err != nil {
 		log.Fatal(err)
