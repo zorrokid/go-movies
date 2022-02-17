@@ -62,14 +62,7 @@ func (d *AddDialog) readFiles(lu fyne.ListableURI, err error) {
 		return
 	}
 
-	uriListImages := make([]fyne.URI, 0)
-	for _, uri := range uriList {
-		if uri.Extension() == ".jpg" || uri.Extension() == ".jpeg" {
-			uriListImages = append(uriListImages, uri)
-		}
-	}
-
-	d.fileListData = uriListImages
+	d.fileListData = util.FilterByExtension(uriList, ".jpg", ".jpeg")
 }
 
 func (d *AddDialog) setSelectedImage(i int) {
