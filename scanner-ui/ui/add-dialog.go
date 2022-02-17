@@ -113,11 +113,33 @@ func (d *AddDialog) createFileDialogButton() *widget.Button {
 	})
 }
 
+func (d *AddDialog) rotateImage() {
+	fmt.Println("Rotate")
+}
+
+func (d *AddDialog) rescanImage() {
+	fmt.Println("Rotate")
+}
+
+func (d *AddDialog) selectScale(scale string) {
+	fmt.Printf("Scale %s\n", scale)
+}
+
 func (d *AddDialog) ShowDialog() {
 
 	d.imageWidget = NewImageWidget(d.selected)
 
-	content := container.New(layout.NewBorderLayout(nil, d.progressBar, nil, nil), d.progressBar)
+	btnRotate := widget.NewButton("Ro", d.rotateImage)
+	btnRescan := widget.NewButton("Re", d.rescanImage)
+	selectScale := widget.NewSelect([]string{"1", "2", "3", "4"}, d.selectScale)
+	imageActionsContainer := container.New(
+		layout.NewHBoxLayout(),
+		btnRotate,
+		btnRescan,
+		selectScale,
+	)
+
+	content := container.New(layout.NewBorderLayout(imageActionsContainer, d.progressBar, nil, nil), imageActionsContainer, d.progressBar)
 	content.Add(d.imageWidget)
 	d.imageContainer = content
 	d.imageContainer.Resize(fyne.NewSize(1800, 1500))
