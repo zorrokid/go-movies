@@ -3,7 +3,6 @@ package ui
 import (
 	"errors"
 	"fmt"
-	"image"
 	_ "image/jpeg"
 	"log"
 	"os"
@@ -90,13 +89,7 @@ func (d *AddDialog) setImage(uri fyne.URI) {
 	}
 	defer imgFile.Close()
 
-	imgConfig, _, err := image.DecodeConfig(imgFile)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
-	d.imageWidget.SetImage(canvas.NewImageFromImage(img), imgConfig)
+	d.imageWidget.SetImage(canvas.NewImageFromImage(img))
 
 	if bbs, err := scanner.Scan(filePath, "fin"); err != nil {
 		log.Fatal(err)
@@ -113,14 +106,6 @@ func (d *AddDialog) createFileDialogButton() *widget.Button {
 	})
 }
 
-func (d *AddDialog) rotateImage() {
-	fmt.Println("Rotate")
-}
-
-func (d *AddDialog) rescanImage() {
-	fmt.Println("Rotate")
-}
-
 func (d *AddDialog) selectScale(scale string) {
 	fmt.Printf("Scale %s\n", scale)
 }
@@ -129,8 +114,8 @@ func (d *AddDialog) ShowDialog() {
 
 	d.imageWidget = NewImageWidget(d.selected)
 
-	btnRotate := widget.NewButton("Ro", d.rotateImage)
-	btnRescan := widget.NewButton("Re", d.rescanImage)
+	btnRotate := widget.NewButton("Ro", d.imageWidget.Rotate)
+	btnRescan := widget.NewButton("Re", d.imageWidget.Rescan)
 	selectScale := widget.NewSelect([]string{"1", "2", "3", "4"}, d.selectScale)
 	imageActionsContainer := container.New(
 		layout.NewHBoxLayout(),
@@ -156,6 +141,7 @@ func (d *AddDialog) ShowDialog() {
 	grid := container.NewAdaptiveGrid(3, d.createFileListContainer(), scroll, fieldsForm)
 
 	d.scanWindow.SetContent(grid)
+	d.scanWindow.Resize(fyne.NewSize(800, 800))
 	d.scanWindow.Show()
 }
 

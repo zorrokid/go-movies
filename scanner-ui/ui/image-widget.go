@@ -1,9 +1,11 @@
 package ui
 
 import (
+	"bytes"
 	"fmt"
-	"image"
 	"image/color"
+	"image/jpeg"
+	"log"
 	"math"
 	"strings"
 
@@ -11,7 +13,9 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/disintegration/imaging"
 	"github.com/otiai10/gosseract"
+	"github.com/zorrokid/go-movies/scanner"
 )
 
 const Scale = 4
@@ -29,12 +33,17 @@ func (r *imageWidgetRenderer) Layout(s fyne.Size) {
 }
 
 func (r *imageWidgetRenderer) MinSize() fyne.Size {
+	if r.widget.Image != nil {
+		w := float32(r.widget.Image.Image.Bounds().Dx())
+		h := float32(r.widget.Image.Image.Bounds().Dy())
+		minSize := fyne.NewSize(
+			w/Scale,
+			h/Scale,
+		)
 
-	minSize := fyne.NewSize(
-		float32(r.widget.ImageConfig.Width)/Scale,
-		float32(r.widget.ImageConfig.Height)/Scale,
-	)
-	return minSize
+		return minSize
+	}
+	return fyne.NewSize(300, 300)
 }
 
 func (r *imageWidgetRenderer) Refresh() {
@@ -42,10 +51,13 @@ func (r *imageWidgetRenderer) Refresh() {
 
 	objects := []fyne.CanvasObject{}
 
+	w := float32(r.widget.Image.Image.Bounds().Dx())
+	h := float32(r.widget.Image.Image.Bounds().Dy())
+
 	if r.widget.Image != nil {
 		imageContainer := container.NewWithoutLayout(r.widget.Image)
 		r.widget.Image.Move(fyne.NewPos(0, 0))
-		s := fyne.NewSize(float32(r.widget.ImageConfig.Width)/Scale, float32(r.widget.ImageConfig.Height)/Scale)
+		s := fyne.NewSize(w/Scale, h/Scale)
 		r.widget.Image.Resize(s)
 		objects = append(objects, imageContainer)
 	}
@@ -80,11 +92,10 @@ func (r *imageWidgetRenderer) Destroy() {
 
 type ImageWidget struct {
 	widget.BaseWidget
-	Image       *canvas.Image
-	Boxes       *[]gosseract.BoundingBox
-	ImageConfig image.Config
-	selected    func(words []string)
-	tap         *fyne.Position
+	Image    *canvas.Image
+	Boxes    *[]gosseract.BoundingBox
+	selected func(words []string)
+	tap      *fyne.Position
 }
 
 func NewImageWidget(selected func(word []string)) *ImageWidget {
@@ -95,9 +106,8 @@ func NewImageWidget(selected func(word []string)) *ImageWidget {
 	return i
 }
 
-func (i *ImageWidget) SetImage(image *canvas.Image, config image.Config) {
+func (i *ImageWidget) SetImage(image *canvas.Image) {
 	i.Image = image
-	i.ImageConfig = config
 	i.Refresh()
 }
 
@@ -131,6 +141,30 @@ func (i *ImageWidget) TappedSecondary(event *fyne.PointEvent) {
 		i.selected(words)
 	}
 	i.tap = nil
+}
+
+func (i *ImageWidget) Rotate() {
+	fmt.Println("rotate")
+	imgRt := imaging.Rotate90(i.Image.Image)
+	i.Image.Image = imgRt
+
+	i.SetImage(canvas.NewImageFromImage(imgRt))
+	i.Refresh()
+}
+
+func (i *ImageWidget) Rescan() {
+	buf := new(bytes.Buffer)
+	err := jpeg.Encode(buf, i.Image.Image, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	imageBytes := buf.Bytes()
+	if bbs, err := scanner.ScanFromBytes(imageBytes, "fin"); err != nil {
+		log.Fatal(err)
+	} else {
+		i.SetBoxes(&bbs)
+	}
 }
 
 func (i *ImageWidget) getWordsBetween(posA fyne.Position, posB fyne.Position) []string {
