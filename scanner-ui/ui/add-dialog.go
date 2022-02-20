@@ -15,7 +15,6 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"github.com/zorrokid/go-movies/scanner"
 	"github.com/zorrokid/go-movies/scanner-ui/util"
 )
 
@@ -90,12 +89,6 @@ func (d *AddDialog) setImage(uri fyne.URI) {
 	defer imgFile.Close()
 
 	d.imageWidget.SetImage(canvas.NewImageFromImage(img))
-
-	if bbs, err := scanner.Scan(filePath, "fin"); err != nil {
-		log.Fatal(err)
-	} else {
-		d.imageWidget.SetBoxes(&bbs)
-	}
 	d.progressBar.Stop()
 }
 

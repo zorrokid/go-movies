@@ -63,7 +63,7 @@ func (r *imageWidgetRenderer) Refresh() {
 	}
 
 	if r.widget.Boxes != nil {
-		for _, bb := range *r.widget.Boxes {
+		for _, bb := range r.widget.Boxes {
 			rect := bb.Box
 			marker := canvas.NewRectangle(color.RGBA{
 				R: 1,
@@ -93,7 +93,7 @@ func (r *imageWidgetRenderer) Destroy() {
 type ImageWidget struct {
 	widget.BaseWidget
 	Image    *canvas.Image
-	Boxes    *[]gosseract.BoundingBox
+	Boxes    []gosseract.BoundingBox
 	selected func(words []string)
 	tap      *fyne.Position
 }
@@ -108,10 +108,12 @@ func NewImageWidget(selected func(word []string)) *ImageWidget {
 
 func (i *ImageWidget) SetImage(image *canvas.Image) {
 	i.Image = image
+	i.Rescan()
 	i.Refresh()
 }
 
-func (i *ImageWidget) SetBoxes(boxes *[]gosseract.BoundingBox) {
+func (i *ImageWidget) SetBoxes(boxes []gosseract.BoundingBox) {
+	fmt.Println("SetBoxes")
 	i.Boxes = boxes
 	i.Refresh()
 }
@@ -121,7 +123,7 @@ func (i *ImageWidget) Tapped(event *fyne.PointEvent) {
 	positionX := event.Position.X * Scale
 	positionY := event.Position.Y * Scale
 
-	for _, b := range *i.Boxes {
+	for _, b := range i.Boxes {
 		if positionX > float32(b.Box.Min.X) && positionX < float32(b.Box.Max.X) && positionY > float32(b.Box.Min.Y) && positionY < float32(b.Box.Max.Y) {
 			words := make([]string, 1)
 			words[0] = b.Word
@@ -153,6 +155,7 @@ func (i *ImageWidget) Rotate() {
 }
 
 func (i *ImageWidget) Rescan() {
+	fmt.Println("rescan")
 	buf := new(bytes.Buffer)
 	err := jpeg.Encode(buf, i.Image.Image, nil)
 	if err != nil {
@@ -163,7 +166,13 @@ func (i *ImageWidget) Rescan() {
 	if bbs, err := scanner.ScanFromBytes(imageBytes, "fin"); err != nil {
 		log.Fatal(err)
 	} else {
-		i.SetBoxes(&bbs)
+		bbsOut := make([]gosseract.BoundingBox, len(bbs))
+		for _, bb := range bbs {
+			if bb.Confidence > 50 {
+				bbsOut = append(bbsOut, bb)
+			}
+		}
+		i.SetBoxes(bbsOut)
 	}
 }
 
@@ -176,7 +185,7 @@ func (i *ImageWidget) getWordsBetween(posA fyne.Position, posB fyne.Position) []
 	maxY := math.Max(float64(posA.Y), float64(posB.Y)) * Scale
 
 	words := make([]string, 5)
-	for _, b := range *i.Boxes {
+	for _, b := range i.Boxes {
 		bMinX := float64(b.Box.Min.X)
 		bMaxX := float64(b.Box.Max.X)
 		bMinY := float64(b.Box.Min.Y)
