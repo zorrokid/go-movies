@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
@@ -88,7 +87,7 @@ func (d *AddDialog) setImage(uri fyne.URI) {
 	}
 	defer imgFile.Close()
 
-	d.imageWidget.SetImage(canvas.NewImageFromImage(img))
+	d.imageWidget.SetImage(img)
 	d.progressBar.Stop()
 }
 
@@ -99,22 +98,24 @@ func (d *AddDialog) createFileDialogButton() *widget.Button {
 	})
 }
 
-func (d *AddDialog) selectScale(scale string) {
-	fmt.Printf("Scale %s\n", scale)
-}
-
 func (d *AddDialog) ShowDialog() {
 
 	d.imageWidget = NewImageWidget(d.selected)
 
-	btnRotate := widget.NewButton("Ro", d.imageWidget.Rotate)
+	btnRotateLeft := widget.NewButton("RoL", d.imageWidget.Rotate)
+	btnRotateRight := widget.NewButton("RoR", d.imageWidget.RotateRight)
+
 	btnRescan := widget.NewButton("Re", d.imageWidget.Rescan)
-	selectScale := widget.NewSelect([]string{"1", "2", "3", "4"}, d.selectScale)
+	selectScale := widget.NewSelect([]string{"1", "2", "4", "8"}, d.imageWidget.setScale)
+	selectConfidence := widget.NewSelect([]string{"20", "40", "60", "80"}, d.imageWidget.setConfidence)
+
 	imageActionsContainer := container.New(
 		layout.NewHBoxLayout(),
-		btnRotate,
+		btnRotateLeft,
+		btnRotateRight,
 		btnRescan,
 		selectScale,
+		selectConfidence,
 	)
 
 	content := container.New(layout.NewBorderLayout(imageActionsContainer, d.progressBar, nil, nil), imageActionsContainer, d.progressBar)
