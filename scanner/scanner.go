@@ -15,3 +15,12 @@ func Scan(path string, languages ...string) ([]gosseract.BoundingBox, error) {
 	bb, _ := client.GetBoundingBoxes(gosseract.RIL_WORD)
 	return bb, nil
 }
+
+func ScanFromBytes(image []byte, languages ...string) ([]gosseract.BoundingBox, error) {
+	client := gosseract.NewClient()
+	defer client.Close()
+	client.SetLanguage(languages...)
+	client.SetImageFromBytes(image)
+	bb, _ := client.GetBoundingBoxes(gosseract.RIL_WORD)
+	return bb, nil
+}
