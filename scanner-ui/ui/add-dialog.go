@@ -109,6 +109,8 @@ func (d *AddDialog) ShowDialog() {
 	selectScale := widget.NewSelect([]string{"1", "2", "4", "8"}, d.imageWidget.setScale)
 	selectConfidence := widget.NewSelect([]string{"20", "40", "60", "80"}, d.imageWidget.setConfidence)
 
+	btnSelectPoints := widget.NewButton("S", d.imageWidget.SetSelectPoints)
+
 	imageActionsContainer := container.New(
 		layout.NewHBoxLayout(),
 		btnRotateLeft,
@@ -116,6 +118,7 @@ func (d *AddDialog) ShowDialog() {
 		btnRescan,
 		selectScale,
 		selectConfidence,
+		btnSelectPoints,
 	)
 
 	content := container.New(layout.NewBorderLayout(imageActionsContainer, d.progressBar, nil, nil), imageActionsContainer, d.progressBar)

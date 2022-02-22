@@ -20,6 +20,15 @@ import (
 	"github.com/zorrokid/go-movies/scanner"
 )
 
+type SelectMode int8
+
+const (
+	Word       SelectMode = 0
+	FourPoints SelectMode = 1
+)
+
+const defaultSelectMode = Word
+
 type imageWidgetRenderer struct {
 	fyne.WidgetRenderer
 	objects *[]fyne.CanvasObject
@@ -102,19 +111,23 @@ func (r *imageWidgetRenderer) Destroy() {
 
 type ImageWidget struct {
 	widget.BaseWidget
-	Image      *canvas.Image
-	Boxes      []gosseract.BoundingBox
-	selected   func(words []string)
-	tap        *fyne.Position
-	scale      float32
-	confidence float64
+	Image              *canvas.Image
+	Boxes              []gosseract.BoundingBox
+	selected           func(words []string)
+	tap                *fyne.Position
+	scale              float32
+	confidence         float64
+	selectMode         SelectMode
+	positionSelections []fyne.Position
 }
 
 func NewImageWidget(selected func(word []string)) *ImageWidget {
 	i := &ImageWidget{
-		selected: selected,
-		scale:    1.0,
-		Boxes:    []gosseract.BoundingBox{},
+		selected:           selected,
+		scale:              1.0,
+		Boxes:              []gosseract.BoundingBox{},
+		selectMode:         Word,
+		positionSelections: []fyne.Position{},
 	}
 	i.ExtendBaseWidget(i)
 	return i
@@ -132,7 +145,7 @@ func (i *ImageWidget) setBoxes(boxes []gosseract.BoundingBox) {
 	i.Refresh()
 }
 
-func (i *ImageWidget) Tapped(event *fyne.PointEvent) {
+func (i *ImageWidget) tappedWords(event *fyne.PointEvent) {
 
 	positionX := event.Position.X * i.scale
 	positionY := event.Position.Y * i.scale
@@ -146,6 +159,27 @@ func (i *ImageWidget) Tapped(event *fyne.PointEvent) {
 			words[0] = b.Word
 			i.selected(words)
 		}
+	}
+}
+
+func (i *ImageWidget) tappedPoints(event *fyne.PointEvent) {
+	i.positionSelections = append(i.positionSelections, event.Position)
+	if len(i.positionSelections) == 4 {
+		for _, pos := range i.positionSelections {
+			fmt.Printf("Position (%f, %f) selected.\n", pos.X, pos.Y)
+		}
+		i.positionSelections = []fyne.Position{}
+		i.selectMode = defaultSelectMode
+	}
+}
+
+func (i *ImageWidget) Tapped(event *fyne.PointEvent) {
+
+	switch i.selectMode {
+	case FourPoints:
+		i.tappedPoints(event)
+	default:
+		i.tappedWords(event)
 	}
 }
 
@@ -214,6 +248,14 @@ func (d *ImageWidget) setConfidence(confidence string) {
 		d.confidence = float64(c)
 	}
 	d.Refresh()
+}
+
+func (d *ImageWidget) SetSelectPoints() {
+	d.SetSelect(FourPoints)
+}
+
+func (d *ImageWidget) SetSelect(mode SelectMode) {
+	d.selectMode = mode
 }
 
 func (i *ImageWidget) getWordsBetween(posA fyne.Position, posB fyne.Position) []string {
