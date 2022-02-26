@@ -99,13 +99,13 @@ func Transform(img image.Image, positions []fyne.Position) (image.Image, error) 
 	minX, maxX, minY, maxY := GetMinMaxXY(positions)
 	fmt.Printf("minX: %f, maxX: %f, minY: %f, maxY: %f", minX, maxX, minY, maxY)
 	destVect := gocv.NewPointVector()
-	destVect.Append(image.Point{int(minX), int(minY)})
-	destVect.Append(image.Point{int(maxX), int(minY)})
-	destVect.Append(image.Point{int(maxX), int(maxY)})
-	destVect.Append(image.Point{int(minX), int(maxY)})
+	destVect.Append(image.Point{0, 0})
+	destVect.Append(image.Point{int(maxX - minX), 0})
+	destVect.Append(image.Point{int(maxX - minX), int(maxY - minY)})
+	destVect.Append(image.Point{0, int(maxY - minY)})
 
 	trmat := gocv.GetPerspectiveTransform(srcVect, destVect)
-	gocv.WarpPerspective(img2, &img2, trmat, image.Point{X: img.Bounds().Dx(), Y: img.Bounds().Dy()})
+	gocv.WarpPerspective(img2, &img2, trmat, image.Point{X: int(maxX - minX), Y: int(maxY - minY)})
 
 	bufOut, err := gocv.IMEncode(".jpg", img2)
 	if err != nil {
