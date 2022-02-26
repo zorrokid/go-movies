@@ -22,10 +22,12 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20200120212402-85cb7272f5e9 // indirect
 	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/yuin/goldmark v1.3.8 // indirect
-	golang.org/x/image v0.0.0-20200430140353-33d19683fad8 // indirect
+	gocv.io/x/gocv v0.29.0 // indirect
+	golang.org/x/image v0.0.0-20210216034530-4410531fe030 // indirect
 	golang.org/x/net v0.0.0-20220114011407-0dd24b26b47d // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/text v0.3.6 // indirect
+	gonum.org/v1/gonum v0.9.3 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
 

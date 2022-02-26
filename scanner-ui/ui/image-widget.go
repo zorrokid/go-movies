@@ -1,11 +1,9 @@
 package ui
 
 import (
-	"bytes"
 	"fmt"
 	"image"
 	"image/color"
-	"image/jpeg"
 	"log"
 	"math"
 	"strconv"
@@ -18,6 +16,7 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/otiai10/gosseract"
 	"github.com/zorrokid/go-movies/scanner"
+	"github.com/zorrokid/go-movies/scanner-ui/util"
 )
 
 type SelectMode int8
@@ -163,13 +162,22 @@ func (i *ImageWidget) tappedWords(event *fyne.PointEvent) {
 }
 
 func (i *ImageWidget) tappedPoints(event *fyne.PointEvent) {
-	i.positionSelections = append(i.positionSelections, event.Position)
+
+	scaledPosition := fyne.NewPos(event.Position.X*i.scale, event.Position.Y*i.scale)
+	i.positionSelections = append(i.positionSelections, scaledPosition)
+
 	if len(i.positionSelections) == 4 {
 		for _, pos := range i.positionSelections {
 			fmt.Printf("Position (%f, %f) selected.\n", pos.X, pos.Y)
 		}
+		imgTr, err := util.Transform(i.Image.Image, i.positionSelections)
+		if err != nil {
+			log.Fatal(err)
+		}
+		i.SetImage(imgTr)
 		i.positionSelections = []fyne.Position{}
 		i.selectMode = defaultSelectMode
+
 	}
 }
 
@@ -199,8 +207,6 @@ func (i *ImageWidget) TappedSecondary(event *fyne.PointEvent) {
 func (i *ImageWidget) Rotate() {
 	fmt.Println("rotate")
 	imgRt := imaging.Rotate90(i.Image.Image)
-	i.Image.Image = imgRt
-
 	i.SetImage(imgRt)
 	i.Refresh()
 }
@@ -216,13 +222,7 @@ func (i *ImageWidget) RotateRight() {
 
 func (i *ImageWidget) Rescan() {
 	fmt.Println("rescan")
-	buf := new(bytes.Buffer)
-	err := jpeg.Encode(buf, i.Image.Image, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	imageBytes := buf.Bytes()
+	imageBytes := util.ImageToByteBuffer(i.Image.Image)
 	if bbs, err := scanner.ScanFromBytes(imageBytes, "fin"); err != nil {
 		log.Fatal(err)
 	} else {
